@@ -12,10 +12,12 @@ namespace Blog_Application.Controllers
     {
         #region Dependency Injection
         private readonly BlogDbContext _blogContext;
+        private readonly Logger<PostsController> _logger;
 
-        public PostsController(BlogDbContext blogContext)
+        public PostsController(BlogDbContext blogContext, Logger<PostsController> logger)
         {
             _blogContext = blogContext;
+            _logger = logger;
         }
 
         #endregion
@@ -26,13 +28,24 @@ namespace Blog_Application.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetAll()
         {
-            var posts = _blogContext.Blogs?.ToList();
-
-            if (posts != null && posts!.Count != 0)
+            try
             {
-                return Ok(posts);
+                var posts = _blogContext.Blogs?.ToList();
+                if (posts != null && posts!.Count != 0)
+                {
+                    _logger.LogInformation("All posts returned. Total Number:{p0}", posts.Count);
+                    return Ok(posts);
+                }
+                _logger.LogInformation("No Posts Found");
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError("Error Message:{p0}", ex.Message);
+                return NotFound();
+            }
+
+            
 
         }
         #endregion
@@ -43,14 +56,23 @@ namespace Blog_Application.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetPost(int id)
         {
-            var post = _blogContext.Blogs?.Find(id);
-
-            if (post != null)
+            try
             {
-                return Ok(post);
-            }
-            return NotFound();
+                var post = _blogContext.Blogs?.Find(id);
 
+                if (post != null)
+                {
+                    _logger.LogInformation("The Post Found");
+                    return Ok(post);
+                }
+                _logger.LogInformation("No such Post");
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error Message:{p0}", ex.Message);
+                return NotFound();
+            }
         }
         #endregion
 
@@ -60,14 +82,24 @@ namespace Blog_Application.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeletePost(int id)
         {
-            var post = _blogContext.Blogs?.Find(id);
-            if (post != null)
+            try
             {
-                _blogContext.Blogs!.Remove(post);
-                _blogContext.SaveChanges();
-                return Ok();
+                var post = _blogContext.Blogs?.Find(id);
+                if (post != null)
+                {
+                    _blogContext.Blogs!.Remove(post);
+                    _blogContext.SaveChanges();
+                    _logger.LogInformation("The Post Deleted");
+                    return Ok();
+                }
+                _logger.LogInformation("No such Post");
+                return NotFound();
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError("Error Message:{p0}", ex.Message);
+                return NotFound();
+            }
         }
         #endregion
 
@@ -77,19 +109,29 @@ namespace Blog_Application.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult UpdatePost(int id, BlogDTO blog)
         {
-            var post = _blogContext.Blogs?.Find(id);
-            if (post == null)
+            try
             {
-               return NotFound();
+                var post = _blogContext.Blogs?.Find(id);
+                if (post == null)
+                {
+                    _logger.LogInformation("No such Post");
+                    return NotFound();
+                }
+
+                post.Title = blog.Title;
+                post.Contents = blog.Contents;
+                post.LastChangeDate = DateTime.Now;
+
+                _blogContext.Blogs!.Update(post);
+                _blogContext.SaveChanges();
+                _logger.LogInformation("The Post Updated");
+                return Ok();
             }
-
-            post.Title = blog.Title;
-            post.Contents = blog.Contents;
-            post.LastChangeDate = DateTime.Now;
-
-            _blogContext.Blogs!.Update(post);
-            _blogContext.SaveChanges();
-            return Ok();
+            catch (Exception ex)
+            {
+                _logger.LogError("Error Message:{p0}", ex.Message);
+                return NotFound();
+            }
         }
         #endregion
 
@@ -98,10 +140,19 @@ namespace Blog_Application.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult InsertPost(BlogDTO blog)
         {
-            blog.LastChangeDate = DateTime.Now;
-            _blogContext.Blogs!.Add(blog);
-            _blogContext.SaveChanges();
-            return Ok();
+            try
+            {
+                blog.LastChangeDate = DateTime.Now;
+                _blogContext.Blogs!.Add(blog);
+                _blogContext.SaveChanges();
+                _logger.LogInformation("The Post added");
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error Message:{p0}", ex.Message);
+                return NotFound();
+            }
         }
         #endregion
 
