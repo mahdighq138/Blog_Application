@@ -71,6 +71,39 @@ namespace Blog_Application.Controllers
         }
         #endregion
 
+        #region Update Post
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult UpdatePost(int id, BlogDTO blog)
+        {
+            var post = _blogContext.Blogs?.Find(id);
+            if (post == null)
+            {
+               return NotFound();
+            }
+
+            post.Title = blog.Title;
+            post.Contents = blog.Contents;
+            post.LastChangeDate = DateTime.Now;
+
+            _blogContext.Blogs!.Update(post);
+            _blogContext.SaveChanges();
+            return Ok();
+        }
+        #endregion
+
+        #region Insert Post
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult InsertPost(BlogDTO blog)
+        {
+            blog.LastChangeDate = DateTime.Now;
+            _blogContext.Blogs!.Add(blog);
+            _blogContext.SaveChanges();
+            return Ok();
+        }
+        #endregion
 
     }
 }
