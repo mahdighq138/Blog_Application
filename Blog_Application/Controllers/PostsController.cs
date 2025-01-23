@@ -3,6 +3,7 @@ using Blog_Application.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+//using Microsoft.Extensions.Logging;
 
 namespace Blog_Application.Controllers
 {
@@ -12,9 +13,9 @@ namespace Blog_Application.Controllers
     {
         #region Dependency Injection
         private readonly BlogDbContext _blogContext;
-        private readonly Logger<PostsController> _logger;
+        private readonly ILogger<PostsController> _logger;
 
-        public PostsController(BlogDbContext blogContext, Logger<PostsController> logger)
+        public PostsController(BlogDbContext blogContext, ILogger<PostsController> logger)
         {
             _blogContext = blogContext;
             _logger = logger;
@@ -123,6 +124,8 @@ namespace Blog_Application.Controllers
                 post.LastChangeDate = DateTime.Now;
 
                 _blogContext.Blogs!.Update(post);
+
+                _blogContext.Update(blog);
                 _blogContext.SaveChanges();
                 _logger.LogInformation("The Post Updated");
                 return Ok();
